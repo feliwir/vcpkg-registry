@@ -1,0 +1,40 @@
+dxvk-native provides shared libraries installed to ${CURRENT_PACKAGES_DIR}/lib:
+
+  libdxvk_dxgi.so
+  libdxvk_d3d9.so      (feature: d3d9)
+  libdxvk_d3d10core.so (feature: d3d10)
+  libdxvk_d3d11.so     (feature: d3d11)
+
+Pkg-config files are installed to ${CURRENT_PACKAGES_DIR}/lib/pkgconfig and
+CMake config files to ${CURRENT_PACKAGES_DIR}/share/cmake/DXVK.
+
+Runtime WSI selection
+---------------------
+Set the DXVK_WSI_DRIVER environment variable to choose the window-system
+integration backend at runtime:
+
+  export DXVK_WSI_DRIVER=SDL2   # or SDL3, GLFW
+
+Link your application against the desired DXVK shared library and make sure
+the library is on LD_LIBRARY_PATH (or in a standard search path).
+
+CMake integration
+-----------------
+
+Modern CMake (find_package):
+  find_package(DXVK REQUIRED)
+  target_link_libraries(my_target PRIVATE DXVK::d3d11)
+  # or link all modules: DXVK::DXVK
+
+Available targets:
+  - DXVK::d3d8
+  - DXVK::d3d9
+  - DXVK::d3d10core
+  - DXVK::d3d11
+  - DXVK::dxgi
+  - DXVK::DXVK (interface library with all modules)
+
+Pkg-config (legacy):
+  find_package(PkgConfig REQUIRED)
+  pkg_check_modules(DXVK_D3D11 REQUIRED IMPORTED_TARGET dxvk-d3d11)
+  target_link_libraries(my_target PRIVATE PkgConfig::DXVK_D3D11)

@@ -1,3 +1,12 @@
 {
-  "default": {}
+  "default": {
+    "dxvk-native": {
+      "baseline": "2.7.1",
+      "port-version": 0
+    },
+    "hwdata": {
+      "baseline": "0.383",
+      "port-version": 0
+    }
+  }
 }

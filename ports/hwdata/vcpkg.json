@@ -1,0 +1,6 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg/master/scripts/vcpkg.schema.json",
+  "name": "hwdata",
+  "version": "0.383",
+  "description": "Hardware identification and configuration data (PNP IDs, USB IDs, etc.)"
+}

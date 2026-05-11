@@ -1,0 +1,49 @@
+@PACKAGE_INIT@
+
+# DXVK CMake Config
+# Enables find_package(DXVK) for downstream projects
+
+include(CMakeFindDependencyMacro)
+
+# Find dependencies
+find_dependency(Vulkan REQUIRED)
+find_dependency(glslang REQUIRED CONFIG)
+find_dependency(spirv-headers REQUIRED CONFIG)
+
+# Import DXVK libraries
+set(_DXVK_MODULES d3d8 d3d9 d3d10core d3d11 dxgi)
+foreach(_module ${_DXVK_MODULES})
+    if(NOT TARGET DXVK::${_module})
+        add_library(DXVK::${_module} SHARED IMPORTED)
+        
+        # Get library file and include directory from pkg-config modules
+        find_package(PkgConfig QUIET)
+        if(PKG_CONFIG_FOUND)
+            pkg_check_modules(DXVK_${_module} QUIET dxvk-${_module})
+            
+            if(DXVK_${_module}_FOUND)
+                set_target_properties(DXVK::${_module} PROPERTIES
+                    IMPORTED_LOCATION "${DXVK_${_module}_LINK_LIBRARIES}"
+                    INTERFACE_INCLUDE_DIRECTORIES "${DXVK_${_module}_INCLUDE_DIRS}"
+                    INTERFACE_LINK_LIBRARIES "Vulkan::Vulkan;glslang::glslang"
+                )
+            endif()
+        endif()
+    endif()
+endforeach()
+
+# Export main DXVK target as interface library that depends on all D3D modules
+if(NOT TARGET DXVK::DXVK)
+    add_library(DXVK::DXVK INTERFACE IMPORTED)
+    set_target_properties(DXVK::DXVK PROPERTIES
+        INTERFACE_LINK_LIBRARIES "DXVK::d3d11;DXVK::d3d10core;DXVK::d3d9;DXVK::d3d8;DXVK::dxgi"
+    )
+endif()
+
+# Provide version information
+set(DXVK_VERSION @VERSION@)
+set(DXVK_VERSION_MAJOR @MAJOR_VERSION@)
+set(DXVK_VERSION_MINOR @MINOR_VERSION@)
+
+# Standard find_package success reporting
+check_required_components(DXVK)

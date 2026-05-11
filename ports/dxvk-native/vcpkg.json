@@ -1,0 +1,49 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg/master/scripts/vcpkg.schema.json",
+  "name": "dxvk-native",
+  "version": "2.7.1",
+  "description": "Vulkan-based implementation of D3D8/9/10/11 for native Linux (DXVK Native, without Wine)",
+  "homepage": "https://github.com/doitsujin/dxvk",
+  "license": "Zlib",
+  "dependencies": [
+    {
+      "name": "glslang",
+      "host": true
+    },
+    {
+      "name": "hwdata",
+      "host": true
+    },
+    "spirv-headers",
+    "vulkan-headers"
+  ],
+  "default-features": [
+    "sdl2"
+  ],
+  "features": {
+    "glfw": {
+      "description": "Enable GLFW WSI backend",
+      "dependencies": [
+        "glfw3"
+      ]
+    },
+    "sdl2": {
+      "description": "Enable SDL2 WSI backend",
+      "dependencies": [
+        {
+          "name": "sdl2",
+          "default-features": false
+        }
+      ]
+    },
+    "sdl3": {
+      "description": "Enable SDL3 WSI backend",
+      "dependencies": [
+        {
+          "name": "sdl3",
+          "default-features": false
+        }
+      ]
+    }
+  }
+}
