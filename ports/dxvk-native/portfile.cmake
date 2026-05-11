@@ -40,6 +40,24 @@ vcpkg_from_gitlab(
 file(COPY "${DISPLAYINFO_SOURCE_PATH}/"
      DESTINATION "${SOURCE_PATH}/subprojects/libdisplay-info")
 
+# Meson disables pkg-config for this cross build setup, so libdisplay-info
+# cannot discover hwdata.pc and falls back to /usr/share/hwdata/pnp.ids.
+# Stage host hwdata's pnp.ids into the subproject and repoint fallback there.
+set(HWDATA_PNP_IDS "${CURRENT_HOST_INSTALLED_DIR}/share/hwdata/pnp.ids")
+if(EXISTS "${HWDATA_PNP_IDS}")
+    file(COPY "${HWDATA_PNP_IDS}"
+         DESTINATION "${SOURCE_PATH}/subprojects/libdisplay-info")
+endif()
+
+set(DISPLAYINFO_MESON_BUILD "${SOURCE_PATH}/subprojects/libdisplay-info/meson.build")
+file(READ "${DISPLAYINFO_MESON_BUILD}" DISPLAYINFO_MESON_CONTENT)
+string(REPLACE
+    "/usr/share/hwdata/pnp.ids"
+    "pnp.ids"
+    DISPLAYINFO_MESON_CONTENT
+    "${DISPLAYINFO_MESON_CONTENT}")
+file(WRITE "${DISPLAYINFO_MESON_BUILD}" "${DISPLAYINFO_MESON_CONTENT}")
+
 # ---------------------------------------------------------------------------
 
 # --- WSI feature options ---------------------------------------------------

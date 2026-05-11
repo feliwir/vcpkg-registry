@@ -1,6 +1,8 @@
+diff --git a/src/d3d10/meson.build b/src/d3d10/meson.build
+index 6a690c4..65f9f11 100644
 --- a/src/d3d10/meson.build
 +++ b/src/d3d10/meson.build
-@@ -10,7 +10,6 @@
+@@ -10,7 +10,6 @@ d3d10_core_link_depends = []
  if platform == 'windows'
    d3d10_d3d11_dep = lib_d3d11
  else
@@ -8,10 +10,11 @@
    d3d10_core_link_depends += files('d3d10core.sym')
    d3d10_d3d11_dep = d3d11_dep
  endif
-
+diff --git a/src/d3d11/meson.build b/src/d3d11/meson.build
+index 20bec08..0fd7d00 100644
 --- a/src/d3d11/meson.build
 +++ b/src/d3d11/meson.build
-@@ -72,7 +72,6 @@
+@@ -72,7 +72,6 @@ d3d11_link_depends = []
  if platform == 'windows'
    d3d11_dxgi_dep = lib_dxgi
  else
@@ -19,10 +22,11 @@
    d3d11_link_depends += files('d3d11.sym')
    d3d11_dxgi_dep = dxgi_dep
  endif
-
+diff --git a/src/d3d8/meson.build b/src/d3d8/meson.build
+index 860d847..26a2c18 100644
 --- a/src/d3d8/meson.build
 +++ b/src/d3d8/meson.build
-@@ -20,7 +20,6 @@
+@@ -20,7 +20,6 @@ d3d8_link_depends = []
  
  if platform != 'windows'
    lib_d3d9 = d3d9_dep
@@ -30,9 +34,11 @@
    d3d8_link_depends += files('d3d8.sym')
  endif
  
+diff --git a/src/d3d9/meson.build b/src/d3d9/meson.build
+index 2f45946..1a376b5 100644
 --- a/src/d3d9/meson.build
 +++ b/src/d3d9/meson.build
-@@ -53,7 +53,6 @@
+@@ -53,7 +53,6 @@ d3d9_ld_args      = []
  d3d9_link_depends = []
  
  if platform != 'windows'
@@ -40,9 +46,11 @@
    d3d9_link_depends += files('d3d9.sym')
  endif
  
+diff --git a/src/dxgi/meson.build b/src/dxgi/meson.build
+index 7c3f432..6250676 100644
 --- a/src/dxgi/meson.build
 +++ b/src/dxgi/meson.build
-@@ -17,7 +17,6 @@
+@@ -17,7 +17,6 @@ dxgi_ld_args      = []
  dxgi_link_depends = []
  
  if platform != 'windows'
@@ -50,9 +58,11 @@
    dxgi_link_depends += files('dxgi.sym')
  endif
  
+diff --git a/src/dxvk/dxvk_bind_mask.h b/src/dxvk/dxvk_bind_mask.h
+index e85fa07..f7da137 100644
 --- a/src/dxvk/dxvk_bind_mask.h
 +++ b/src/dxvk/dxvk_bind_mask.h
-@@ -144,7 +144,7 @@
+@@ -144,7 +144,7 @@ namespace dxvk {
        if (!mask)
          return -1;
        
@@ -61,7 +71,46 @@
      }
  
      bool operator == (const DxvkBindingSet& other) const {
-
+diff --git a/src/dxvk/dxvk_instance.cpp b/src/dxvk/dxvk_instance.cpp
+index 541caaf..fe79c3f 100644
+--- a/src/dxvk/dxvk_instance.cpp
++++ b/src/dxvk/dxvk_instance.cpp
+@@ -244,6 +244,9 @@ namespace dxvk {
+       info.ppEnabledLayerNames      = layerNames.data();
+       info.enabledExtensionCount    = extensionNames.size();
+       info.ppEnabledExtensionNames  = extensionNames.data();
++#ifdef __APPLE__
++      info.flags                   |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
++#endif
+ 
+       VkResult status = m_vkl->vkCreateInstance(&info, nullptr, &instance);
+ 
+@@ -364,6 +367,9 @@ namespace dxvk {
+       &extensions.extSurfaceMaintenance1,
+       &extensions.khrGetSurfaceCapabilities2,
+       &extensions.khrSurface,
++#ifdef __APPLE__
++      &extensions.khrPortabilityEnumeration,
++#endif
+     }};
+   }
+ 
+diff --git a/src/dxvk/dxvk_instance.h b/src/dxvk/dxvk_instance.h
+index 7e426d0..859f031 100644
+--- a/src/dxvk/dxvk_instance.h
++++ b/src/dxvk/dxvk_instance.h
+@@ -30,6 +30,9 @@ namespace dxvk {
+     VkExtensionProperties extSurfaceMaintenance1      = vk::makeExtension(VK_EXT_SURFACE_MAINTENANCE_1_EXTENSION_NAME);
+     VkExtensionProperties khrGetSurfaceCapabilities2  = vk::makeExtension(VK_KHR_GET_SURFACE_CAPABILITIES_2_EXTENSION_NAME);
+     VkExtensionProperties khrSurface                  = vk::makeExtension(VK_KHR_SURFACE_EXTENSION_NAME);
++#ifdef __APPLE__
++    VkExtensionProperties khrPortabilityEnumeration   = vk::makeExtension(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
++#endif
+   };
+ 
+ 
+diff --git a/src/util/util_env.cpp b/src/util/util_env.cpp
+index c86c3ab..867044b 100644
 --- a/src/util/util_env.cpp
 +++ b/src/util/util_env.cpp
 @@ -10,6 +10,10 @@
@@ -75,7 +124,7 @@
  #endif
  
  #include "util_env.h"
-@@ -104,6 +108,14 @@
+@@ -104,6 +108,14 @@ namespace dxvk::env {
      }
  
      return std::string(exePath);
@@ -90,7 +139,7 @@
  #endif
    }
    
-@@ -127,8 +139,12 @@
+@@ -127,7 +139,11 @@ namespace dxvk::env {
  #else
      std::array<char, 16> posixName = {};
      dxvk::str::strlcpy(posixName.data(), name.c_str(), 16);
@@ -98,14 +147,15 @@
 +    ::pthread_setname_np(posixName.data());
 +#else
      ::pthread_setname_np(pthread_self(), posixName.data());
- #endif
 +#endif
+ #endif
    }
  
- 
+diff --git a/src/util/util_small_vector.h b/src/util/util_small_vector.h
+index 861c9e0..51e7b26 100644
 --- a/src/util/util_small_vector.h
 +++ b/src/util/util_small_vector.h
-@@ -194,7 +194,7 @@
+@@ -194,7 +194,7 @@ namespace dxvk {
  
      size_t pick_capacity(size_t n) {
        // Pick next largest power of two for the new capacity
@@ -114,7 +164,8 @@
      }
  
      T* ptr(size_t idx) {
-
+diff --git a/src/util/util_win32_compat.h b/src/util/util_win32_compat.h
+index 5b156c6..c848797 100644
 --- a/src/util/util_win32_compat.h
 +++ b/src/util/util_win32_compat.h
 @@ -1,6 +1,6 @@
@@ -125,7 +176,8 @@
  
  #include <windows.h>
  #include <dlfcn.h>
-
+diff --git a/src/vulkan/vulkan_loader.cpp b/src/vulkan/vulkan_loader.cpp
+index f9d1e98..a45e12e 100644
 --- a/src/vulkan/vulkan_loader.cpp
 +++ b/src/vulkan/vulkan_loader.cpp
 @@ -10,15 +10,29 @@
@@ -133,18 +185,10 @@
  
    static std::pair<HMODULE, PFN_vkGetInstanceProcAddr> loadVulkanLibrary() {
 -    static const std::array<const char*, 2> dllNames = {{
--#ifdef _WIN32
--      "winevulkan.dll",
--      "vulkan-1.dll",
--#else
--      "libvulkan.so",
--      "libvulkan.so.1",
--#endif
--    }};
-+    #ifdef _WIN32
+ #ifdef _WIN32
 +    static const std::array<const char*, 2> dllNames = {{
-+      "winevulkan.dll",
-+      "vulkan-1.dll",
+       "winevulkan.dll",
+       "vulkan-1.dll",
 +    }};
 +#elif defined(__APPLE__)
 +    static const std::array<const char*, 9> dllNames = {{
@@ -158,32 +202,34 @@
 +      "/opt/homebrew/lib/libMoltenVK.dylib",
 +      "/usr/local/lib/libMoltenVK.dylib",
 +    }};
-+#else
+ #else
 +    static const std::array<const char*, 2> dllNames = {{
-+      "libvulkan.so",
-+      "libvulkan.so.1",
-+    }};
+       "libvulkan.so",
+       "libvulkan.so.1",
+-#endif
+     }};
 +#endif
  
-      for (auto dllName : dllNames) {
-        HMODULE library = LoadLibraryA(dllName);
- 
+     for (auto dllName : dllNames) {
+       HMODULE library = LoadLibraryA(dllName);
+diff --git a/src/wsi/sdl3/wsi_platform_sdl3.cpp b/src/wsi/sdl3/wsi_platform_sdl3.cpp
+index 9975cda..0768ec6 100644
 --- a/src/wsi/sdl3/wsi_platform_sdl3.cpp
 +++ b/src/wsi/sdl3/wsi_platform_sdl3.cpp
-@@ -19,8 +19,16 @@
+@@ -19,8 +19,16 @@ namespace dxvk::wsi {
          "libSDL3.so.0"
  #endif
        );
 +#if defined(__APPLE__)
-+    if (libsdl == nullptr)
+     if (libsdl == nullptr)
+-      throw DxvkError("SDL3 WSI: Failed to load SDL3 DLL.");
 +      libsdl = LoadLibraryA("libSDL3.dylib");
 +    if (libsdl == nullptr)
 +      libsdl = LoadLibraryA("/opt/homebrew/lib/libSDL3.0.dylib");
 +    if (libsdl == nullptr)
 +      libsdl = LoadLibraryA("/usr/local/lib/libSDL3.0.dylib");
 +#endif
-     if (libsdl == nullptr)
--      throw DxvkError("SDL3 WSI: Failed to load SDL3 DLL.");
++    if (libsdl == nullptr)
 +      throw DxvkError(str::format("SDL3 WSI: Failed to load SDL3 DLL: ", dlerror() ? dlerror() : "unknown error"));
  
      #define SDL_PROC(ret, name, params) \
