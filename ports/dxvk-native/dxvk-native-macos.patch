@@ -126,6 +126,48 @@
  #include <windows.h>
  #include <dlfcn.h>
 
+--- a/src/vulkan/vulkan_loader.cpp
++++ b/src/vulkan/vulkan_loader.cpp
+@@ -10,15 +10,29 @@
+ namespace dxvk::vk {
+ 
+   static std::pair<HMODULE, PFN_vkGetInstanceProcAddr> loadVulkanLibrary() {
+-    static const std::array<const char*, 2> dllNames = {{
+-#ifdef _WIN32
+-      "winevulkan.dll",
+-      "vulkan-1.dll",
+-#else
+-      "libvulkan.so",
+-      "libvulkan.so.1",
+-#endif
+-    }};
++    #ifdef _WIN32
++    static const std::array<const char*, 2> dllNames = {{
++      "winevulkan.dll",
++      "vulkan-1.dll",
++    }};
++#elif defined(__APPLE__)
++    static const std::array<const char*, 9> dllNames = {{
++      "libvulkan.1.dylib",
++      "libvulkan.dylib",
++      "/opt/homebrew/lib/libvulkan.1.dylib",
++      "/opt/homebrew/lib/libvulkan.dylib",
++      "/usr/local/lib/libvulkan.1.dylib",
++      "/usr/local/lib/libvulkan.dylib",
++      "libMoltenVK.dylib",
++      "/opt/homebrew/lib/libMoltenVK.dylib",
++      "/usr/local/lib/libMoltenVK.dylib",
++    }};
++#else
++    static const std::array<const char*, 2> dllNames = {{
++      "libvulkan.so",
++      "libvulkan.so.1",
++    }};
++#endif
+ 
+      for (auto dllName : dllNames) {
+        HMODULE library = LoadLibraryA(dllName);
+ 
 --- a/src/wsi/sdl3/wsi_platform_sdl3.cpp
 +++ b/src/wsi/sdl3/wsi_platform_sdl3.cpp
 @@ -19,8 +19,16 @@
