@@ -1,3 +1,67 @@
+diff --git a/src/dxvk/dxvk_adapter.cpp b/src/dxvk/dxvk_adapter.cpp
+index d890765..eaabbf8 100644
+--- a/src/dxvk/dxvk_adapter.cpp
++++ b/src/dxvk/dxvk_adapter.cpp
+@@ -1,10 +1,18 @@
+ #include <cstring>
++#ifdef __APPLE__
++#define VK_ENABLE_BETA_EXTENSIONS
++#endif
++
+ #include <unordered_set>
+ 
+ #include "dxvk_adapter.h"
+ #include "dxvk_device.h"
+ #include "dxvk_instance.h"
+ 
++#ifdef __APPLE__
++#include <vulkan/vulkan_beta.h>
++#endif
++
+ namespace dxvk {
+ 
+   DxvkDeviceQueue getDeviceQueue(const Rc<vk::DeviceFn>& vkd, DxvkDeviceQueueIndex queue) {
+@@ -187,6 +195,24 @@ namespace dxvk {
+     for (const auto& ext : extensions)
+       extensionNames.push_back(ext.extensionName);
+ 
++#ifdef __APPLE__
++    bool hasPortabilitySubset = false;
++    for (const auto& ext : extensions) {
++      if (std::strcmp(ext.extensionName, VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME) == 0) {
++        hasPortabilitySubset = true;
++        break;
++      }
++    }
++
++    VkPhysicalDevicePortabilitySubsetFeaturesKHR portabilityFeatures = {
++      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PORTABILITY_SUBSET_FEATURES_KHR };
++    if (hasPortabilitySubset) {
++      VkPhysicalDeviceFeatures2 query = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 };
++      query.pNext = &portabilityFeatures;
++      vk->vkGetPhysicalDeviceFeatures2(m_handle, &query);
++    }
++#endif
++
+     // Query queue infos
+     DxvkDeviceQueueMapping queueMapping = m_capabilities.getQueueMapping();
+ 
+@@ -221,6 +247,13 @@ namespace dxvk {
+     deviceInfo.ppEnabledExtensionNames = extensionNames.data();
+     deviceInfo.pEnabledFeatures = &features->features;
+ 
++#ifdef __APPLE__
++    if (hasPortabilitySubset) {
++      portabilityFeatures.pNext = const_cast<void*>(deviceInfo.pNext);
++      deviceInfo.pNext = &portabilityFeatures;
++    }
++#endif
++
+     VkDevice device = VK_NULL_HANDLE;
+     VkResult vr = vk->vkCreateDevice(m_handle, &deviceInfo, nullptr, &device);
+
+     if (vr)
+       throw DxvkError(str::format("Failed to create Vulkan device: ", vr));
 diff --git a/src/d3d10/meson.build b/src/d3d10/meson.build
 index 6a690c4..65f9f11 100644
 --- a/src/d3d10/meson.build
@@ -194,13 +258,7 @@ index f9d1e98..a45e12e 100644
 +    static const std::array<const char*, 9> dllNames = {{
 +      "libvulkan.1.dylib",
 +      "libvulkan.dylib",
-+      "/opt/homebrew/lib/libvulkan.1.dylib",
-+      "/opt/homebrew/lib/libvulkan.dylib",
-+      "/usr/local/lib/libvulkan.1.dylib",
-+      "/usr/local/lib/libvulkan.dylib",
 +      "libMoltenVK.dylib",
-+      "/opt/homebrew/lib/libMoltenVK.dylib",
-+      "/usr/local/lib/libMoltenVK.dylib",
 +    }};
  #else
 +    static const std::array<const char*, 2> dllNames = {{
