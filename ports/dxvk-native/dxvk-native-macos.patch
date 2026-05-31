@@ -21,7 +21,7 @@ index d890765..eaabbf8 100644
  namespace dxvk {
  
    DxvkDeviceQueue getDeviceQueue(const Rc<vk::DeviceFn>& vkd, DxvkDeviceQueueIndex queue) {
-@@ -187,6 +195,24 @@ namespace dxvk {
+@@ -187,6 +195,37 @@ namespace dxvk {
      for (const auto& ext : extensions)
        extensionNames.push_back(ext.extensionName);
  
@@ -41,6 +41,19 @@ index d890765..eaabbf8 100644
 +      query.pNext = &portabilityFeatures;
 +      vk->vkGetPhysicalDeviceFeatures2(m_handle, &query);
 +    }
++
++    // Mask requested core features against actual device support.
++    // MoltenVK rejects vkCreateDevice when unsupported bits are set.
++    VkPhysicalDeviceFeatures supportedCoreFeatures = { };
++    vk->vkGetPhysicalDeviceFeatures(m_handle, &supportedCoreFeatures);
++
++    auto mutableFeatures = const_cast<VkPhysicalDeviceFeatures2*>(features);
++    const VkBool32* src = reinterpret_cast<const VkBool32*>(&supportedCoreFeatures);
++    VkBool32* dst = reinterpret_cast<VkBool32*>(&mutableFeatures->features);
++    const size_t count = sizeof(VkPhysicalDeviceFeatures) / sizeof(VkBool32);
++
++    for (size_t i = 0; i < count; i++)
++      dst[i] = dst[i] & src[i];
 +#endif
 +
      // Query queue infos
@@ -244,7 +257,7 @@ diff --git a/src/vulkan/vulkan_loader.cpp b/src/vulkan/vulkan_loader.cpp
 index f9d1e98..a45e12e 100644
 --- a/src/vulkan/vulkan_loader.cpp
 +++ b/src/vulkan/vulkan_loader.cpp
-@@ -10,15 +10,29 @@
+@@ -10,15 +10,23 @@
  namespace dxvk::vk {
  
    static std::pair<HMODULE, PFN_vkGetInstanceProcAddr> loadVulkanLibrary() {
@@ -255,7 +268,7 @@ index f9d1e98..a45e12e 100644
        "vulkan-1.dll",
 +    }};
 +#elif defined(__APPLE__)
-+    static const std::array<const char*, 9> dllNames = {{
++    static const std::array<const char*, 3> dllNames = {{
 +      "libvulkan.1.dylib",
 +      "libvulkan.dylib",
 +      "libMoltenVK.dylib",
