@@ -317,3 +317,15 @@ index 9975cda..0768ec6 100644
  
      #define SDL_PROC(ret, name, params) \
        name = reinterpret_cast<pfn_##name>(GetProcAddress(libsdl, #name)); \
+
+--- a/src/dxvk/dxvk_context.cpp
++++ b/src/dxvk/dxvk_context.cpp
+@@ -7061,7 +7061,7 @@
+ 
+         m_cmd->track(m_state.vi.vertexBuffers[binding].buffer(), DxvkAccess::Read);
+       } else {
+-        buffers[i] = VK_NULL_HANDLE;
++        buffers[i] = m_common->dummyResources().bufferInfo().buffer;
+         offsets[i] = 0;
+         lengths[i] = 0;
+         strides[i] = 0;
