@@ -305,3 +305,15 @@ index 9975cda..0768ec6 100644
  
      #define SDL_PROC(ret, name, params) \
        name = reinterpret_cast<pfn_##name>(GetProcAddress(libsdl, #name)); \
+     diff --git a/src/dxvk/dxvk_device_info.cpp b/src/dxvk/dxvk_device_info.cpp
+     --- a/src/dxvk/dxvk_device_info.cpp
+     +++ b/src/dxvk/dxvk_device_info.cpp
+     @@ -714,7 +714,7 @@
+          ENABLE_FEATURE(core.features, fillModeNonSolid, true),
+          ENABLE_FEATURE(core.features, fragmentStoresAndAtomics, false),
+          ENABLE_FEATURE(core.features, fullDrawIndexUint32, true),
+     -      ENABLE_FEATURE(core.features, geometryShader, true),
+     +      ENABLE_FEATURE(core.features, geometryShader, false),
+          ENABLE_FEATURE(core.features, imageCubeArray, true),
+          ENABLE_FEATURE(core.features, independentBlend, true),
+          ENABLE_FEATURE(core.features, logicOp, false),
